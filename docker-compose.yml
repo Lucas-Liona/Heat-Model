@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  heat-sim:
+    build: .
+    container_name: heat_transfer_simulation
+    ports:
+      - "8050:8050"  # Dash dashboard
+      - "8888:8888"  # Jupyter notebook (optional)
+    volumes:
+      - ./results:/app/results
+      - ./examples:/app/examples
+    environment:
+      - PYTHONPATH=/app
+    command: python examples/interactive_demo.py
+    
+  jupyter:
+    build: .
+    container_name: heat_transfer_jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/app
+    command: >
+      bash -c "pip install jupyter &&
+               jupyter notebook --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=''"
+    environment:
+      - PYTHONPATH=/app
