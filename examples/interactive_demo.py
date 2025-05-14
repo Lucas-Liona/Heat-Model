@@ -5,9 +5,10 @@ Interactive dashboard for heat transfer simulation
 
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Add the src directory to Python path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from src.python.dashboard import HeatTransferDashboard
+from python.dashboard import HeatTransferDashboard
 
 def main():
     print("Starting Heat Transfer Simulation Dashboard...")

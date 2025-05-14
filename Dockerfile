@@ -13,14 +13,10 @@ RUN apt-get update && apt-get install -y \
     libeigen3-dev \
     libomp-dev \
     git \
-    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Set Python3 as default python
 RUN ln -s /usr/bin/python3 /usr/bin/python
-
-# Install pybind11
-RUN pip install pybind11[global]
 
 # Create working directory
 WORKDIR /app
@@ -29,16 +25,13 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
+# Install pybind11 after other requirements
+RUN pip install pybind11[global]
+
 # Copy source code
 COPY . .
 
-# Build the project (clean any existing build)
-RUN rm -rf build && mkdir build && cd build && \
-    cmake .. -DCMAKE_BUILD_TYPE=Release && \
-    make -j$(nproc)
-
-# Install Python package in development mode
-RUN cd build && make install
+# Build the project using setup.py (which handles CMake)
 RUN pip install -e .
 
 # Create necessary directories

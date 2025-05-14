@@ -5,22 +5,22 @@ services:
     build: .
     container_name: heat_transfer_simulation
     ports:
-      - "8050:8050"  # Dash dashboard
-      - "8888:8888"  # Jupyter notebook (optional)
+      - "8050:8050"
     volumes:
       - ./results:/app/results
       - ./examples:/app/examples
     environment:
       - PYTHONPATH=/app
-    command: python examples/interactive_demo.py
+    command: python examples/simple_test.py
     
   jupyter:
     build: .
     container_name: heat_transfer_jupyter
     ports:
-      - "8888:8888"
+      - "8889:8888"  # Jupyter notebook (host:container)
     volumes:
       - .:/app
+      - ./results:/app/results
     command: >
       bash -c "pip install jupyter &&
                jupyter notebook --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=''"

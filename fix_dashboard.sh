@@ -1,3 +1,14 @@
+#!/bin/bash
+
+echo "Fixing Heat Transfer Dashboard Import Issues..."
+
+# 1. Stop current containers
+echo "Stopping containers..."
+docker-compose down
+
+# 2. Fix the dashboard.py imports
+echo "Fixing dashboard.py imports..."
+cat > src/python/dashboard.py << 'EOF'
 import dash
 from dash import dcc, html, Input, Output, callback
 import dash_bootstrap_components as dbc
@@ -389,3 +400,37 @@ class HeatTransferDashboard:
 if __name__ == '__main__':
     dashboard = HeatTransferDashboard()
     dashboard.run(debug=True)
+EOF
+
+# 3. Create __init__.py files to make it a proper Python package
+echo "Creating __init__.py files..."
+touch src/__init__.py
+touch src/python/__init__.py
+
+# 4. Ensure examples/interactive_demo.py has correct import paths
+echo "Fixing interactive_demo.py..."
+cat > examples/interactive_demo.py << 'EOF'
+#!/usr/bin/env python3
+"""
+Interactive dashboard for heat transfer simulation
+"""
+
+import sys
+import os
+# Add the src directory to Python path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+
+from python.dashboard import HeatTransferDashboard
+
+def main():
+    print("Starting Heat Transfer Simulation Dashboard...")
+    print("Open http://localhost:8050 in your browser")
+    
+    dashboard = HeatTransferDashboard()
+    dashboard.run(host='0.0.0.0', port=8050, debug=True)
+
+if __name__ == '__main__':
+    main()
+EOF
+
+echo "Done! Now run: docker-compose up --build"
