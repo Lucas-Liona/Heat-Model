@@ -17,4 +17,6 @@ A high-performance heat transfer simulation using C++ with Python visualization 
 ```bash
 git clone https://github.com/yourusername/heat_transfer_sim.git
 cd heat_transfer_sim
-docker-compose up
+
+# or you can simply open in a codespace and run
+docker-compose up --build

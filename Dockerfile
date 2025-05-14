@@ -25,21 +25,24 @@ RUN pip install pybind11[global]
 # Create working directory
 WORKDIR /app
 
-# Copy requirements
+# Copy requirements first (for better Docker layer caching)
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 # Copy source code
 COPY . .
 
-# Build the project
-RUN mkdir build && cd build && \
+# Build the project (clean any existing build)
+RUN rm -rf build && mkdir build && cd build && \
     cmake .. -DCMAKE_BUILD_TYPE=Release && \
     make -j$(nproc)
 
-# Install Python package
+# Install Python package in development mode
 RUN cd build && make install
 RUN pip install -e .
+
+# Create necessary directories
+RUN mkdir -p results examples
 
 # Expose port for dashboard
 EXPOSE 8050

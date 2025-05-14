@@ -7,19 +7,43 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 
 # Find required packages
 find_package(Python COMPONENTS Interpreter Development)
-find_package(pybind11 REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(OpenMP)
 
-# Enable OpenMP if found
-if(OpenMP_CXX_FOUND)
-    target_link_libraries(heat_transfer_core PUBLIC OpenMP::OpenMP_CXX)
-    add_definitions(-DWITH_OPENMP)
+# Try to find pybind11
+find_package(pybind11 QUIET)
+if(NOT pybind11_FOUND)
+    # If not found, try to use pip installed version
+    execute_process(
+        COMMAND ${Python_EXECUTABLE} -m pybind11 --cmakedir
+        OUTPUT_VARIABLE pybind11_DIR
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    find_package(pybind11 REQUIRED PATHS ${pybind11_DIR})
 endif()
+
+# Find Eigen3
+find_package(Eigen3 QUIET)
+if(NOT Eigen3_FOUND)
+    # Try to find it in standard locations
+    find_path(EIGEN3_INCLUDE_DIR 
+        NAMES Eigen/Dense
+        PATHS /usr/include/eigen3 /usr/local/include/eigen3
+    )
+    if(EIGEN3_INCLUDE_DIR)
+        set(EIGEN3_FOUND TRUE)
+        message(STATUS "Found Eigen3: ${EIGEN3_INCLUDE_DIR}")
+    else()
+        message(FATAL_ERROR "Eigen3 not found. Please install with: sudo apt install libeigen3-dev")
+    endif()
+endif()
+
+# Find OpenMP
+find_package(OpenMP)
 
 # Include directories
 include_directories(src/cpp/include)
-include_directories(${EIGEN3_INCLUDE_DIR})
+if(EIGEN3_INCLUDE_DIR)
+    include_directories(${EIGEN3_INCLUDE_DIR})
+endif()
 
 # Create core library
 set(CORE_SOURCES
@@ -31,15 +55,28 @@ set(CORE_SOURCES
 )
 
 add_library(heat_transfer_core STATIC ${CORE_SOURCES})
-target_link_libraries(heat_transfer_core ${EIGEN3_LIBRARIES})
+
+# Set position independent code for the static library
+set_property(TARGET heat_transfer_core PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+# Enable OpenMP if found (using keyword signature)
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(heat_transfer_core PUBLIC OpenMP::OpenMP_CXX)
+    add_definitions(-DWITH_OPENMP)
+endif()
+
+# Link Eigen3 if found (using keyword signature)
+if(TARGET Eigen3::Eigen)
+    target_link_libraries(heat_transfer_core PUBLIC Eigen3::Eigen)
+endif()
 
 # Python module
 pybind11_add_module(heat_transfer src/cpp/pybind/bindings.cpp)
 target_link_libraries(heat_transfer PRIVATE heat_transfer_core)
 
 # Compiler flags for optimization
-target_compile_options(heat_transfer_core PRIVATE -O3 -march=native)
-target_compile_options(heat_transfer PRIVATE -O3 -march=native)
+target_compile_options(heat_transfer_core PRIVATE -O3)
+target_compile_options(heat_transfer PRIVATE -O3)
 
 # Install targets
 install(TARGETS heat_transfer
@@ -49,5 +86,12 @@ install(TARGETS heat_transfer
 # Add tests
 enable_testing()
 if(BUILD_TESTING)
-    add_subdirectory(tests/cpp)
+    # Try to find Google Test
+    find_package(GTest QUIET)
+    if(NOT GTest_FOUND)
+        message(STATUS "Google Test not found. Tests will be skipped.")
+        message(STATUS "Install with: sudo apt-get install libgtest-dev")
+    else()
+        add_subdirectory(tests/cpp)
+    endif()
 endif()
