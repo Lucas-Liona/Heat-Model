@@ -31,11 +31,11 @@ PointCloud CupGenerator::generate(const Parameters& params) {
 
                 //in later runs maybe we can add slight nonhomogeny with temperature or  xyz with normal distribution engines
                 if ((radius <= max_radius && radius >= min_radius && z <= params.coffeeHeight) || (radius <= max_radius && z <= 0.01)) {
-                    cloud.addPoint(Point(x, y, z, params.cupTemp, MaterialType::CUP_MATERIAL));
+                    cloud.addPoint(Point(x, y, z, params.cupTemp, MaterialType::CUP_MATERIAL, cloud.size()));
                 } else if (radius <= min_radius && z <= params.coffeeHeight - .01 && z >= 0.01) {
-                    cloud.addPoint(Point(x, y, z, params.coffeeTemp, MaterialType::COFFEE));
+                    cloud.addPoint(Point(x, y, z, params.coffeeTemp, MaterialType::COFFEE, cloud.size()));
                 } else {
-                    cloud.addPoint(Point(x, y, z, params.airTemp, MaterialType::AIR));
+                    cloud.addPoint(Point(x, y, z, params.airTemp, MaterialType::AIR, cloud.size()));
                 }
             }
         }

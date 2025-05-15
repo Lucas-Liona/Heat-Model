@@ -25,7 +25,7 @@ class Point {
     */
     
 public:
-    Point(double x, double y, double z, double temp, MaterialType material);
+    Point(double x, double y, double z, double temp, MaterialType material, size_t index);
     
     Position getPosition() const;
     double getTemperature() const;
@@ -33,9 +33,17 @@ public:
     MaterialType getMaterial() const;
     void setMaterial(MaterialType material);
 
+    size_t index() const;
+    std::vector<Point> getNeighbors(); //it might be better to use index's instead
+    std::vector<size_t> getNeighborsIndex();
+    void setNeighbors(); //append based on index
+
 
 private:
     Position position_;
     double temperature_;
     MaterialType material_;
+
+    size_t index;
+    std::vector<size_t> neighbors_;
 };

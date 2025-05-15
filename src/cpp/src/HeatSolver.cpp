@@ -6,8 +6,9 @@ HeatSolver::HeatSolver(PointCloud& pointCloud, const std::vector<Material>& mate
 
 
 double HeatSolver::calculate_K(MaterialType mat1, MaterialType mat2) {
-    double k1 = getThermalConductivity(mat1);
-    double k2 = getThermalConductivity(mat2);
+    // Access thermal conductivity from materials vector using MaterialType as index
+    double k1 = materials_[static_cast<int>(mat1)].getThermalConductivity();
+    double k2 = materials_[static_cast<int>(mat2)].getThermalConductivity();
     
     if (mat1 == mat2) {
         return k1;  // same material
@@ -55,6 +56,12 @@ void HeatSolver::step() {
         //newTemperatures[i] = pointCloud_.getPoint(i).getNeighbors().getTemperature();
 
         Point focal_point = pointCloud_.getPoint(i);
+        std::cout << focal_point.index();
+        //std::vector<Point> neighbors = focal_point.getNeighbors();
+
+        //for (Point neighbor : neighbors) {
+            
+        //}
         
     }
     
