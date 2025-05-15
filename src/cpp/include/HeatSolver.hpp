@@ -6,7 +6,8 @@
 class HeatSolver {
 public:
     HeatSolver(PointCloud& pointCloud, const std::vector<Material>& materials, double timeStep);
-    
+
+    double calculate_K(MaterialType mat1, MaterialType mat2);
     void step();
     void run_for_time(double duration);
     

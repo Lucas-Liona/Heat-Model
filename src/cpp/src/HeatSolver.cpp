@@ -4,13 +4,58 @@
 HeatSolver::HeatSolver(PointCloud& pointCloud, const std::vector<Material>& materials, double timeStep)
     : pointCloud_(pointCloud), materials_(materials), timeStep_(timeStep), currentTime_(0.0) {}
 
+
+double HeatSolver::calculate_K(MaterialType mat1, MaterialType mat2) {
+    double k1 = getThermalConductivity(mat1);
+    double k2 = getThermalConductivity(mat2);
+    
+    if (mat1 == mat2) {
+        return k1;  // same material
+    }
+    
+    // Different materials: harmonic mean
+    return 2.0 * k1 * k2 / (k1 + k2);
+}
+
+
 void HeatSolver::step() {
 
     std::vector<double> newTemperatures;
     newTemperatures.reserve(pointCloud_.size());
     
-    for (auto i = size_t{0}; i < pointCloud_.size(); ++i) {
+    /*
+    so the basic sudo code or idea is to apply fouriers law    q = k × A × (dT/dx)        and       dT/dt = Q / (ρ × heatcapacity × V)
 
+    we first find the values, then set them all at once. This way we really skip in time so everything is fairly distributed
+
+    important to note we shouldnt really do this for every particle, we should have  simulation bound arond the coffee cup and then outside of that is boundary condition
+    or room temperature
+
+    for each neighbor
+        get the difference in temperature
+        get distance between them
+
+        calculate k (the effective conduction between two materials, ie, air to air VS air to coffee)
+
+        then we need to handle contact area and volume, because were using a point cloud these should most likely be constants representing the volume of a particle and the area of a particle
+
+    then set newTemperatures[i]
+
+    class Point {
+    static constexpr double POINT_VOLUME = 1.25e-7;  // m³
+    static constexpr double CONTACT_AREA = 2.5e-5;   // m²
+    };
+
+    // In heat transfer calculation:
+    double heat_flux = k_eff * CONTACT_AREA * temp_diff / distance;
+    double temp_change = heat_flux * dt / (density * specific_heat * POINT_VOLUME);
+    */
+    
+    for (auto i = size_t{0}; i < pointCloud_.size(); ++i) {
+        //newTemperatures[i] = pointCloud_.getPoint(i).getNeighbors().getTemperature();
+
+        Point focal_point = pointCloud_.getPoint(i);
+        
     }
     
     // set temperatures
