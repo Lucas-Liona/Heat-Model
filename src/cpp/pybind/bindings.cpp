@@ -61,7 +61,7 @@ PYBIND11_MODULE(heat_transfer, m) {
     py::class_<HeatSolver>(m, "HeatSolver")
         .def(py::init<PointCloud&, const std::vector<Material>&, double>())
         .def("step", &HeatSolver::step)
-        .def("run", &HeatSolver::run)
+        .def("run", &HeatSolver::run_for_time)
         .def("get_current_time", &HeatSolver::getCurrentTime)
         .def("get_average_temperature", &HeatSolver::getAverageTemperature)
         .def("get_max_temperature", &HeatSolver::getMaxTemperature)

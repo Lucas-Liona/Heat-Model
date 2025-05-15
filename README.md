@@ -2,6 +2,10 @@
 
 A  heat transfer simulation using C++ with Python visualization to model the way heat dissipates from a coffee cup.
 
+This is 3Blue1Browns playlist on the topic, focusing on Partial Differential Equations to solve the problem
+
+https://youtube.com/playlist?list=PLZHQObOWTQDNPOjrT6KVlfJuKtYTftqH6&si=KGAH1tOJPqrnW8c0
+
 ## Features
 
 - Point cloud-based heat transfer simulation
@@ -20,6 +24,9 @@ A  heat transfer simulation using C++ with Python visualization to model the way
 docker-compose up --build
 
 ```
+visit your port 8050 and you should see this
+
+![alt text](image-2.png)
 
 ### Here is the radius curve of the coffee cup r given by z
 ![alt text](image.png)

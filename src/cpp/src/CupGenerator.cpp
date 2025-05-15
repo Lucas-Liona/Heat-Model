@@ -7,8 +7,8 @@ PointCloud CupGenerator::generate(const Parameters& params) {
     PointCloud cloud;
     
     auto spacing = double{params.pointSpacing};
-    auto boxHeight = double{.4};
-    auto boxWidth = double{.4};
+    auto boxHeight = double{.15};
+    auto boxWidth = double{.3};
 
     //coffee cup will be .08 meters so a little less than half the 
 
