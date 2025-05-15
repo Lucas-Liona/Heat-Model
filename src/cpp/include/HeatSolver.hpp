@@ -8,7 +8,7 @@ public:
     HeatSolver(PointCloud& pointCloud, const std::vector<Material>& materials, double timeStep);
     
     void step();
-    void run(double duration);
+    void run_for_time(double duration);
     
     double getCurrentTime() const;
     double getAverageTemperature(MaterialType material) const;

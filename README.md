@@ -1,6 +1,6 @@
 # Heat Transfer Simulation
 
-A high-performance heat transfer simulation using C++ with Python visualization for coffee cup cooling analysis.
+A  heat transfer simulation using C++ with Python visualization to model the way heat dissipates from a coffee cup.
 
 ## Features
 
@@ -15,8 +15,11 @@ A high-performance heat transfer simulation using C++ with Python visualization 
 ### Using Docker (Recommended)
 
 ```bash
-git clone https://github.com/yourusername/heat_transfer_sim.git
-cd heat_transfer_sim
+# clone the repository or open in a codespace and run
 
-# or you can simply open in a codespace and run
 docker-compose up --build
+
+```
+
+### Here is the radius curve of the coffee cup r given by z
+![alt text](image.png)

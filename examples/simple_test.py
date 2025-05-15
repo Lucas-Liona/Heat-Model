@@ -12,6 +12,18 @@ import numpy as np
 # Import only the core heat_transfer module
 import heat_transfer
 
+MATERIAL_VISUAL_PROPS = {
+    0: {'size': 6},  # Coffee
+    1: {'size': 8},  # Ceramic  
+    2: {'size': 1}   # Air
+}
+
+MATERIAL_NAMES = {
+    0: 'Coffee', 
+    1: 'Ceramic', 
+    2: 'Air'
+}
+
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 # Global variables
@@ -41,7 +53,6 @@ def update_visualization(n_clicks):
         # Generate geometry
         generator = heat_transfer.CupGenerator()
         params = heat_transfer.CupParameters()
-        params.point_spacing = 0.01  # Larger spacing for faster generation
         params.inner_radius = 0.03
         params.height = 0.08
         
@@ -51,15 +62,25 @@ def update_visualization(n_clicks):
         # Extract data for visualization
         points = []
         materials = []
-        
+        temperatures = []
+
         for i in range(point_cloud.size()):
             point = point_cloud.get_point(i)
             pos = point.get_position()
             points.append([pos.x, pos.y, pos.z])
             materials.append(int(point.get_material()))
+            temperatures.append(point.get_temperature())
         
+        point_sizes = [MATERIAL_VISUAL_PROPS[mat]['size'] for mat in materials]        
+
         points = np.array(points)
         materials = np.array(materials)
+        temperatures = np.array(temperatures)  
+        point_sizes = np.array(point_sizes)
+
+        material_names = {0: 'Coffee', 1: 'Ceramic', 2: 'Air'}
+        hover_text = [f"Material: {material_names[materials[i]]}, Temp: {temperatures[i]:.1f}K" 
+                    for i in range(len(materials))]
         
         # Create 3D scatter plot
         fig = go.Figure(data=go.Scatter3d(
@@ -68,11 +89,18 @@ def update_visualization(n_clicks):
             z=points[:, 2],
             mode='markers',
             marker=dict(
-                size=4,
-                color=materials,
-                colorscale='Viridis',
-                showscale=True
-            )
+                size=point_sizes,
+                color=temperatures, 
+                colorscale='Plasma',
+                showscale=True,
+                colorbar=dict(title="Temperature (K)")
+            ),
+            text=hover_text, 
+            hovertemplate='<b>Position:</b><br>' +
+                        'x: %{x:.4f}<br>' +
+                        'y: %{y:.4f}<br>' +
+                        'z: %{z:.4f}<br>' +
+                        '%{text}<extra></extra>'
         ))
         
         fig.update_layout(
@@ -94,5 +122,4 @@ def update_visualization(n_clicks):
 if __name__ == '__main__':
     print("Starting Simple Heat Transfer Dashboard...")
     print("Open http://localhost:8050 in your browser")
-    # Fixed: use app.run() instead of app.run_server()
     app.run(host='0.0.0.0', port=8050, debug=True)
