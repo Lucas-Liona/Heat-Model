@@ -29,12 +29,13 @@ PYBIND11_MODULE(heat_transfer, m) {
     
     // Point class
     py::class_<Point>(m, "Point")
-        .def(py::init<double, double, double, double, MaterialType>())
+        .def(py::init<double, double, double, double, MaterialType, size_t>())
         .def("get_position", &Point::getPosition)
         .def("get_temperature", &Point::getTemperature)
         .def("set_temperature", &Point::setTemperature)
         .def("get_material", &Point::getMaterial)
-        .def("set_material", &Point::setMaterial);
+        .def("set_material", &Point::setMaterial)
+        .def("get_index", &Point::getIndex);  // Updated to use getIndex()
     
     // PointCloud class
     py::class_<PointCloud>(m, "PointCloud")

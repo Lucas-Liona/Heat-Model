@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Enhanced visualization with temperature debugging
+Enhanced visualization with temperature debugging - Fixed camera reset
 """
 
 import dash
@@ -30,6 +30,8 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 # Global variables
 point_cloud = None
 solver = None
+# ADD THIS VARIABLE TO TRACK UI REVISION - KEY FIX!
+ui_revision = 0
 
 app.layout = dbc.Container([
     html.H1("Heat Transfer Simulation - Enhanced Debug Visualization"),
@@ -80,8 +82,20 @@ app.layout = dbc.Container([
      Input("color-by", "value")]
 )
 def update_visualization(gen_clicks, sim_clicks, size_mult, air_opacity, color_by):
-    global point_cloud, solver
+    global point_cloud, solver, ui_revision
     
+    # Determine if we should increment the UI revision (which resets camera)
+    ctx = dash.callback_context
+    should_reset_camera = True
+    
+    if ctx.triggered:
+        trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        # Only reset camera when generating new geometry
+        if trigger_id == 'generate-btn':
+            ui_revision += 1  # This will reset the camera
+        else:
+            should_reset_camera = False  # Keep current camera position
+
     # Handle geometry generation
     if gen_clicks and not point_cloud:
         try:
@@ -109,6 +123,9 @@ def update_visualization(gen_clicks, sim_clicks, size_mult, air_opacity, color_b
     if sim_clicks and solver:
         try:
             solver.step()
+            # ADD DEBUG PRINTS
+            print(f"Simulation step completed at time: {solver.get_current_time()}")
+            print(f"Coffee temperature: {solver.get_average_temperature(heat_transfer.MaterialType.COFFEE):.1f}K")
         except Exception as e:
             return {}, f"❌ Error running simulation: {str(e)}", ""
     
@@ -131,6 +148,9 @@ def update_visualization(gen_clicks, sim_clicks, size_mult, air_opacity, color_b
         points = np.array(points)
         materials = np.array(materials)
         temperatures = np.array(temperatures)
+        
+        # DEBUG: Print temperature ranges
+        print(f"Temperature range: {np.min(temperatures):.1f}K to {np.max(temperatures):.1f}K")
         
         # Debug information about temperatures
         temp_debug_info = []
@@ -168,9 +188,9 @@ def update_visualization(gen_clicks, sim_clicks, size_mult, air_opacity, color_b
                 colors = temperatures[mask]
                 colorscale = 'Viridis'  # Changed to Viridis for better contrast
                 showscale = True
-                # Set explicit color range to show temperature differences
-                cmin = np.min(temperatures)  # Use actual data range
-                cmax = np.max(temperatures)
+                # Use YOUR fixed values - no dynamic calculation
+                cmin = None
+                cmax = None
             else:
                 colors = MATERIAL_VISUAL_PROPS[material_type]['color']
                 colorscale = None
@@ -189,7 +209,7 @@ def update_visualization(gen_clicks, sim_clicks, size_mult, air_opacity, color_b
                                                  points[mask, 1], 
                                                  points[mask, 2])]
             
-            # Add trace
+            # Add trace - USING YOUR EXACT CODE WITH cmin=0, cmax=400
             fig.add_trace(go.Scatter3d(
                 x=points[mask, 0],
                 y=points[mask, 1],
@@ -199,9 +219,9 @@ def update_visualization(gen_clicks, sim_clicks, size_mult, air_opacity, color_b
                 marker=dict(
                     size=size,
                     color=colors,
-                    colorscale=colorscale,
-                    cmin=cmin,
-                    cmax=cmax,
+                    colorscale='Viridis',
+                    cmin=0,
+                    cmax=400,
                     showscale=showscale and material_type == 0,  # Only show colorbar for coffee
                     opacity=opacity,
                     colorbar=dict(title="Temperature (K)", x=0.9) if showscale and material_type == 0 else None
@@ -211,7 +231,7 @@ def update_visualization(gen_clicks, sim_clicks, size_mult, air_opacity, color_b
                 showlegend=True
             ))
         
-        # Update layout with better camera angle and styling
+        # KEY FIX: Use uirevision to control when camera resets
         fig.update_layout(
             scene=dict(
                 xaxis=dict(title='X (m)', showgrid=True, gridwidth=1, gridcolor='lightgray'),
@@ -226,7 +246,9 @@ def update_visualization(gen_clicks, sim_clicks, size_mult, air_opacity, color_b
             height=600,
             title="Heat Transfer Simulation - 3D Point Cloud",
             paper_bgcolor='white',
-            plot_bgcolor='white'
+            plot_bgcolor='white',
+            # THIS IS THE KEY FIX - uirevision controls when the plot resets
+            uirevision=ui_revision
         )
         
         status_msg = f"✅ Displaying {point_cloud.size()} points"

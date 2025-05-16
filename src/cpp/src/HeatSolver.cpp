@@ -1,5 +1,6 @@
 #include "HeatSolver.hpp"
 #include <algorithm>
+#include <iostream>
 
 HeatSolver::HeatSolver(PointCloud& pointCloud, const std::vector<Material>& materials, double timeStep)
     : pointCloud_(pointCloud), materials_(materials), timeStep_(timeStep), currentTime_(0.0) {}
@@ -55,19 +56,21 @@ void HeatSolver::step() {
     for (auto i = size_t{0}; i < pointCloud_.size(); ++i) {
         //newTemperatures[i] = pointCloud_.getPoint(i).getNeighbors().getTemperature();
 
-        Point focal_point = pointCloud_.getPoint(i);
-        std::cout << focal_point.index();
+        Point& focal_point = pointCloud_.getPoint(i);
+        std::cout << focal_point.getIndex() << std::endl; 
         //std::vector<Point> neighbors = focal_point.getNeighbors();
 
         //for (Point neighbor : neighbors) {
             
         //}
         
+        // For now, keep temperature unchanged
+        newTemperatures.push_back(focal_point.getTemperature());
     }
     
     // set temperatures
     for (auto i = size_t{0}; i < pointCloud_.size(); ++i) {
-        pointCloud_.getPoint(i).setTemperature(newTemperatures[i]);
+        pointCloud_.getPoint(i).setTemperature(newTemperatures[i]-20);
     }
     
     currentTime_ += timeStep_;
