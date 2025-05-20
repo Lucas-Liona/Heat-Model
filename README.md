@@ -30,3 +30,9 @@ visit your port 8050 and you should see this
 
 ### Here is the radius curve of the coffee cup r given by z
 ![alt text](image.png)
+
+
+### To-Do
+
+* The first thing I want to accomplish is changing it from Array of Structures to Structure of Arrays, this will be a significant speed up for 
+* Next I will implmenet kd tree for nieghbor finding

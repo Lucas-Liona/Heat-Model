@@ -1,6 +1,6 @@
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11/numpy.h>
+#include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
+#include "pybind11/numpy.h"
 
 #include "Point.hpp"
 #include "PointCloud.hpp"
@@ -34,18 +34,34 @@ PYBIND11_MODULE(heat_transfer, m) {
         .def("get_temperature", &Point::getTemperature)
         .def("set_temperature", &Point::setTemperature)
         .def("get_material", &Point::getMaterial)
-        .def("set_material", &Point::setMaterial)
-        .def("get_index", &Point::getIndex);  // Updated to use getIndex()
+        .def("set_material", &Point::setMaterial);
+    
+    // PointCloud::PointRef class
+    py::class_<PointCloud::PointRef>(m, "PointRef")
+        .def("get_position", &PointCloud::PointRef::getPosition)
+        .def("get_temperature", &PointCloud::PointRef::getTemperature)
+        .def("set_temperature", &PointCloud::PointRef::setTemperature)
+        .def("get_material", &PointCloud::PointRef::getMaterial)
+        .def("get_index", &PointCloud::PointRef::getIndex);
     
     // PointCloud class
     py::class_<PointCloud>(m, "PointCloud")
         .def(py::init<>())
-        .def("add_point", &PointCloud::addPoint)
-        .def("get_point", static_cast<Point&(PointCloud::*)(size_t)>(&PointCloud::getPoint), 
-             py::return_value_policy::reference_internal)
+        // For add_point, specify exactly which overload to use
+        .def("add_point", static_cast<size_t(PointCloud::*)(double, double, double, double, MaterialType)>(&PointCloud::addPoint))
+        // For get_point, we also need to specify exactly which overload
+        .def("get_point", static_cast<PointCloud::PointRef(PointCloud::*)(size_t)>(&PointCloud::getPoint), 
+             py::return_value_policy::copy)
         .def("size", &PointCloud::size)
         .def("clear", &PointCloud::clear)
-        .def("save_to_vtk", &PointCloud::saveToVTK);
+        .def("save_to_vtk", &PointCloud::saveToVTK)
+        // Add direct access methods in the same class
+        .def("get_x", &PointCloud::getX)
+        .def("get_y", &PointCloud::getY)
+        .def("get_z", &PointCloud::getZ)
+        .def("get_temperature", &PointCloud::getTemperature)
+        .def("set_temperature", &PointCloud::setTemperature)
+        .def("get_material", &PointCloud::getMaterial);
     
     // Material class
     py::class_<Material>(m, "Material")
