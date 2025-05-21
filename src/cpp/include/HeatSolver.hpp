@@ -18,7 +18,7 @@ public:
 
 private:
     PointCloud& pointCloud_;
-    const std::vector<Material>& materials_;
+    const std::vector<Material> materials_;
     double timeStep_;
     double currentTime_;
 };

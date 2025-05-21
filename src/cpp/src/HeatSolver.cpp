@@ -3,8 +3,26 @@
 #include <iostream>
 #include <cmath>
 
+
 HeatSolver::HeatSolver(PointCloud& pointCloud, const std::vector<Material>& materials, double timeStep)
-    : pointCloud_(pointCloud), materials_(materials), timeStep_(timeStep), currentTime_(0.0) {}
+    : pointCloud_(pointCloud), materials_(materials), timeStep_(timeStep), currentTime_(0.0) {
+        // Verify material properties
+        if (materials_.size() < 3) {
+            std::cerr << "ERROR: Not enough materials provided. Expected at least 3." << std::endl;
+            return;
+        }
+        
+        // Check each material's thermal conductivity
+        for (size_t i = 0; i < materials_.size(); i++) {
+            double k = materials_[i].getThermalConductivity();
+            if (k < 0.001) {
+                std::cerr << "WARNING: Material " << i << " has very low thermal conductivity: " 
+                        << k << std::endl;
+            } else {
+                std::cout << "Material " << i << " thermal conductivity: " << k << std::endl;
+            }
+        }
+    }
 
 
 double HeatSolver::calculate_K(MaterialType mat1, MaterialType mat2) {
@@ -15,13 +33,10 @@ double HeatSolver::calculate_K(MaterialType mat1, MaterialType mat2) {
     if (mat1 == mat2) {
         return k1;  // same material
     }
-
-    std::cout << "K1: " << k1 << " K2: " << k2 << "harmonic mean:" << 2.0 * k1 * k2 / (k1 + k2) << std::endl;
-
+    
     // Different materials: harmonic mean
     return 2.0 * k1 * k2 / (k1 + k2);
 }
-
 /*
     So the way it stands I am somewhere between SoA and AoS. while the heatsolver code is architecturally built like
     Array of Structures, where you reference a single point, this is really an interface with the Structure of Arrays
@@ -54,6 +69,12 @@ void HeatSolver::step() {
     then set newTemperatures[i]
 
     */
+    
+    std::cout << "Materials vector size: " << materials_.size() << std::endl;
+    for (size_t i = 0; i < materials_.size(); i++) {
+        std::cout << "Material " << i << " thermal conductivity: " 
+                  << materials_[i].getThermalConductivity() << std::endl;
+    }
 
     std::vector<double> newTemperatures(pointCloud_.size());
 
