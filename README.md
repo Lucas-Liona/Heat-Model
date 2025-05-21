@@ -42,3 +42,5 @@ visit your port 8050 and you should see this
 * Longer Term: make the steps automatic, track time, pause the simulation, examine features about the current image
 * Longer Term: handle convection or the way air takes away temperature, I want to experiment with air particles ticking more often, or being able to teleport or instantly transfer their temperature in a rising motion.
 
+* Change the way variables work (with a config or data python file), allow user to set initial conditions
+
