@@ -19,6 +19,8 @@ https://youtube.com/playlist?list=PLZHQObOWTQDNPOjrT6KVlfJuKtYTftqH6&si=KGAH1tOJ
 ### Using Docker (Recommended)
 
 ```bash
+
+git clone https://github.com/Lucas-Liona/Heat-Model
 # clone the repository or open in a codespace and run
 
 docker-compose up --build
