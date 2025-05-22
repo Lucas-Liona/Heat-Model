@@ -3,9 +3,20 @@
 #include <vector>
 #include <string>
 #include <cstddef>  // For size_t
+#include <memory>
+
+// nanoflann includes
+#include <nanoflann.hpp>
 
 // Forward declaration for nanoflann compatibility
-template <class T> struct nanoflann_adaptor;
+class PointCloud;
+
+// Define the KD-tree type for nanoflann
+typedef nanoflann::KDTreeSingleIndexAdaptor<
+    nanoflann::L2_Simple_Adaptor<double, PointCloud>,
+    PointCloud,
+    3 // 3D points
+> PointCloudKDTree;
 
 class PointCloud {
 private:
@@ -18,6 +29,10 @@ private:
     
     // For neighbor storage (will be added later)
     std::vector<std::vector<size_t>> neighbors_;
+    
+    // nanoflann k-d tree
+    std::unique_ptr<PointCloudKDTree> kdTree_;
+    bool kdTreeBuilt_;
     
 public:
     PointCloud();
@@ -83,6 +98,7 @@ public:
         temperatures_.push_back(temp);
         materials_.push_back(mat);
         neighbors_.emplace_back();  // Empty neighbor list
+        kdTreeBuilt_ = false;  // Mark tree as needing rebuild
         return index;
     }
     
@@ -97,10 +113,15 @@ public:
     // VTK export (update implementation needed)
     void saveToVTK(const std::string& filename) const;
     
-    // nanoflann interface (for K-d tree later)
-    size_t kdtree_get_point_count() const { return x_.size(); }
+    // K-d tree methods
+    void buildKDTree();
+    std::vector<size_t> findNeighborsInRadius(size_t pointIndex, double radius) const;
+    bool isKDTreeBuilt() const { return kdTreeBuilt_; }
     
-    double kdtree_get_pt(const size_t idx, const int dim) const {
+    // nanoflann interface - REQUIRED by nanoflann
+    inline size_t kdtree_get_point_count() const { return x_.size(); }
+    
+    inline double kdtree_get_pt(const size_t idx, const int dim) const {
         return (dim == 0) ? x_[idx] : (dim == 1) ? y_[idx] : z_[idx];
     }
     

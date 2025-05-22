@@ -3,7 +3,6 @@
 #include <iostream>
 #include <cmath>
 
-
 HeatSolver::HeatSolver(PointCloud& pointCloud, const std::vector<Material>& materials, double timeStep)
     : pointCloud_(pointCloud), materials_(materials), timeStep_(timeStep), currentTime_(0.0) {
         // Verify material properties
@@ -24,7 +23,6 @@ HeatSolver::HeatSolver(PointCloud& pointCloud, const std::vector<Material>& mate
         }
     }
 
-
 double HeatSolver::calculate_K(MaterialType mat1, MaterialType mat2) {
     // Access thermal conductivity from materials vector using MaterialType as index
     double k1 = materials_[static_cast<int>(mat1)].getThermalConductivity();
@@ -37,38 +35,13 @@ double HeatSolver::calculate_K(MaterialType mat1, MaterialType mat2) {
     // Different materials: harmonic mean
     return 2.0 * k1 * k2 / (k1 + k2);
 }
-/*
-    So the way it stands I am somewhere between SoA and AoS. while the heatsolver code is architecturally built like
-    Array of Structures, where you reference a single point, this is really an interface with the Structure of Arrays
-    architecture in PointCloud. In the future I will change this to fully utilize the switch but for now this works
-
-    I also want to change the way neighbors are calculated. Its currently n^2, with kd tree it can be nlogn, but with 
-    this particular grid setup I think something O(1) is possible. But for future scaling with imperfect spacing then its
-    better to use kd tree.
-
-*/
 
 void HeatSolver::step() {
-
-    /*
-    so the basic sudo code or idea is to apply fouriers law    q = k × A × (dT/dx)        and       dT/dt = Q / (ρ × heatcapacity × V)
-
-    we first find the values, then set them all at once. This way we really skip in time so everything is fairly distributed
-
-    important to note we shouldnt really do this for every particle, we should have  simulation bound arond the coffee cup and then outside of that is boundary condition
-    or room temperature
-
-    for each neighbor
-        get the difference in temperature
-        get distance between them
-
-        calculate k (the effective conduction between two materials, ie, air to air VS air to coffee)
-
-        then we need to handle contact area and volume, because were using a point cloud these should most likely be constants representing the volume of a particle and the area of a particle
-
-    then set newTemperatures[i]
-
-    */
+    // Build k-d tree on first step if not already built
+    if (!pointCloud_.isKDTreeBuilt()) {
+        std::cout << "Building k-d tree for neighbor search..." << std::endl;
+        pointCloud_.buildKDTree();
+    }
     
     std::cout << "Materials vector size: " << materials_.size() << std::endl;
     for (size_t i = 0; i < materials_.size(); i++) {
@@ -79,32 +52,31 @@ void HeatSolver::step() {
     std::vector<double> newTemperatures(pointCloud_.size());
 
     for (size_t i = 0; i < pointCloud_.size(); ++i) {
-
         auto focal_point = pointCloud_.getPoint(i);
-
-        //std::cout << focal_point.getIndex() << std::endl;
-        
         double currentTemp = focal_point.getTemperature();
-
-        //std::cout << currentTemp << std::endl;
-
         double totalHeatTransfer = 0.0;
         
-        // brute force neighbor search, WILL BE IMPROVED LATER
-        for (size_t j = 0; j < pointCloud_.size(); ++j) {
-            if (i == j) continue;
-            
-            auto neighbor = pointCloud_.getPoint(j);
+        // Use nanoflann k-d tree to find neighbors within 1cm
+        std::vector<size_t> neighborIndices = pointCloud_.findNeighborsInRadius(i, 0.01);
+        
+        // Debug: Print neighbor count for first few points
+        if (i < 5) {
+            std::cout << "Point " << i << " has " << neighborIndices.size() << " neighbors" << std::endl;
+        }
+        
+        // Process each neighbor
+        for (size_t neighborIdx : neighborIndices) {
+            auto neighbor = pointCloud_.getPoint(neighborIdx);
             Position currentPos = focal_point.getPosition();
             Position neighborPos = neighbor.getPosition();
             
-            // CALCULATE DISTANCE
+            // Calculate distance
             double dx = neighborPos.x - currentPos.x;
             double dy = neighborPos.y - currentPos.y;
             double dz = neighborPos.z - currentPos.z;
             double distance = std::sqrt(dx*dx + dy*dy + dz*dz);
             
-            if (distance > 0.01) continue; // 1cm cutoff
+            if (distance < 1e-10) continue; // Avoid division by zero
             
             // Calculate heat transfer rate between the two points
             double tempDiff = neighbor.getTemperature() - currentTemp;
@@ -117,10 +89,14 @@ void HeatSolver::step() {
             double heatTransferRate = k_eff * area * tempDiff / distance;
             totalHeatTransfer += heatTransferRate;
 
-            std::cout << "Distance: " << distance << " k_eff: " << k_eff << "tempDiff:" << tempDiff <<std::endl;
-
+            // Debug output for first point only
+            if (i == 0 && neighborIndices.size() > 0) {
+                std::cout << "  Neighbor " << neighborIdx << ": distance=" << distance 
+                         << ", k_eff=" << k_eff << ", tempDiff=" << tempDiff << std::endl;
+            }
         }
-        // temperature change: dT = Q * dt / (rho * c * V)
+        
+        // Calculate temperature change: dT = Q * dt / (rho * c * V)
         MaterialType material = focal_point.getMaterial();
         const Material& mat = materials_[static_cast<int>(material)];
         double rho = mat.getDensity();
@@ -128,22 +104,24 @@ void HeatSolver::step() {
         double V = 1e-9; // 1mm³ volume per point
 
         double tempChange = totalHeatTransfer * timeStep_ / (rho * c * V);
-        //std::cout << "Point " << i << " temp change: " << tempChange << "K" << std::endl;
-
         newTemperatures[i] = currentTemp + tempChange;
-                
+        
+        // Debug: Print temperature change for first few points
+        if (i < 3) {
+            std::cout << "Point " << i << " temp change: " << tempChange << "K (from " 
+                     << currentTemp << "K to " << newTemperatures[i] << "K)" << std::endl;
+        }
     }
     
     // Apply all temperature changes at once
     for (size_t i = 0; i < pointCloud_.size(); ++i) {
-
         auto point = pointCloud_.getPoint(i);
         point.setTemperature(newTemperatures[i]);
     }
     
     currentTime_ += timeStep_;
     
-    std::cout << "Step completed, time: " << currentTime_ << std::endl;
+    std::cout << "Step completed, time: " << currentTime_ << "s" << std::endl;
 }
 
 void HeatSolver::run_for_time(double duration) {

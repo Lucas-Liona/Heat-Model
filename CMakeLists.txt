@@ -39,6 +39,29 @@ endif()
 # Find OpenMP
 find_package(OpenMP)
 
+# Find nanoflann (header-only library)
+find_path(NANOFLANN_INCLUDE_DIR 
+    NAMES nanoflann.hpp
+    PATHS /usr/include /usr/local/include
+    PATH_SUFFIXES nanoflann
+)
+
+if(NOT NANOFLANN_INCLUDE_DIR)
+    message(STATUS "nanoflann not found, downloading...")
+    # Download nanoflann header if not found
+    file(DOWNLOAD 
+        https://raw.githubusercontent.com/jlblancoc/nanoflann/master/include/nanoflann.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/nanoflann.hpp
+    )
+    set(NANOFLANN_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external)
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/external)
+endif()
+
+message(STATUS "Using nanoflann from: ${NANOFLANN_INCLUDE_DIR}")
+
+# Add nanoflann include directory
+include_directories(${NANOFLANN_INCLUDE_DIR})
+
 # Include directories
 include_directories(src/cpp/include)
 if(EIGEN3_INCLUDE_DIR)
