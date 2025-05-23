@@ -70,7 +70,7 @@ std::vector<size_t> PointCloud::findNeighborsInRadius(size_t pointIndex, double 
     nanoflann::SearchParams params;
     params.sorted = false;  // We don't need sorted results
     
-    // Perform radius search
+    // Perform radius search - Use the correct type for matches
     std::vector<std::pair<size_t, double>> matches;
     size_t numMatches = kdTree_->radiusSearch(query_pt, radius * radius, matches, params);
     

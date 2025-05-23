@@ -82,7 +82,9 @@ PYBIND11_MODULE(heat_transfer, m) {
         .def("get_current_time", &HeatSolver::getCurrentTime)
         .def("get_average_temperature", &HeatSolver::getAverageTemperature)
         .def("get_max_temperature", &HeatSolver::getMaxTemperature)
-        .def("get_min_temperature", &HeatSolver::getMinTemperature);
+        .def("get_min_temperature", &HeatSolver::getMinTemperature)
+        .def("running", &HeatSolver::getRunning);
+
     
     // CupGenerator class
     py::class_<CupGenerator>(m, "CupGenerator")

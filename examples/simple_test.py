@@ -25,11 +25,13 @@ MATERIAL_NAMES = {
     2: 'Air'
 }
 
+
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 # Global variables
 point_cloud = None
 solver = None
+
 # ADD THIS VARIABLE TO TRACK UI REVISION - KEY FIX!
 ui_revision = 0
 
@@ -40,6 +42,7 @@ app.layout = dbc.Container([
         dbc.Col([
             dbc.Button("Generate Geometry", id="generate-btn", color="primary", className="mb-3"),
             dbc.Button("Run Simulation Step", id="sim-btn", color="success", className="mb-3"),
+            dbc.Button("Run for 5 minutes", id="run-btn", color="success", className="mb-3"),
         ], width=12)
     ]),
     
@@ -77,11 +80,12 @@ app.layout = dbc.Container([
      Output("temp-debug", "children")],
     [Input("generate-btn", "n_clicks"),
      Input("sim-btn", "n_clicks"),
+     Input("run-btn", "n_clicks"),
      Input("size-multiplier", "value"),
      Input("air-opacity", "value"),
      Input("color-by", "value")]
 )
-def update_visualization(gen_clicks, sim_clicks, size_mult, air_opacity, color_by):
+def update_visualization(gen_clicks, sim_clicks, run_clicks, size_mult, air_opacity, color_by):
     global point_cloud, solver, ui_revision
     
     # Determine if we should increment the UI revision (which resets camera)
@@ -114,7 +118,8 @@ def update_visualization(gen_clicks, sim_clicks, size_mult, air_opacity, color_b
                 heat_transfer.Material.ceramic(),
                 heat_transfer.Material.air()
             ]
-            solver = heat_transfer.HeatSolver(point_cloud, materials, 0.1)
+            solver = heat_transfer.HeatSolver(point_cloud, materials, 0.01)
+
             
         except Exception as e:
             return {}, f"❌ Error generating geometry: {str(e)}", ""
@@ -128,7 +133,24 @@ def update_visualization(gen_clicks, sim_clicks, size_mult, air_opacity, color_b
             print(f"Coffee temperature: {solver.get_average_temperature(heat_transfer.MaterialType.COFFEE):.1f}K")
         except Exception as e:
             return {}, f"❌ Error running simulation: {str(e)}", ""
-    
+
+    # Handle running 
+    if solver and run_clicks:
+        try:
+            run_simulation(gen_clicks, sim_clicks, run_clicks, size_mult, air_opacity, color_by)
+
+        except Exception as e:
+            return {}, f"❌ Error running simulation: {str(e)}", ""
+     
+    '''# Handle running 
+    if solver and (run_clicks or (solver.running() and (solver.get_current_time() < 60*5))):
+        try:
+            solver.run(1)
+            #update_visualization(gen_clicks, sim_clicks, run_clicks, size_mult, air_opacity, color_by)
+
+        except Exception as e:
+            return {}, f"❌ Error running simulation: {str(e)}", ""'''
+
     if not point_cloud:
         return {}, "Click 'Generate Geometry' to start", ""
     
@@ -257,6 +279,8 @@ def update_visualization(gen_clicks, sim_clicks, size_mult, air_opacity, color_b
                 avg_coffee_temp = solver.get_average_temperature(heat_transfer.MaterialType.COFFEE)
                 status_msg += f" | Current time: {solver.get_current_time():.1f}s"
                 status_msg += f" | Coffee temp: {avg_coffee_temp:.1f}K ({avg_coffee_temp-273.15:.1f}°C)"
+
+                status_msg += f" | Running bool: {solver.running()}"
             except:
                 status_msg += " | Error getting temperatures"
         
@@ -266,6 +290,27 @@ def update_visualization(gen_clicks, sim_clicks, size_mult, air_opacity, color_b
         import traceback
         error_msg = f"❌ Error: {str(e)}\n{traceback.format_exc()}"
         return {}, error_msg, ""
+
+
+def run_simulation(gen_clicks, sim_clicks, run_clicks, size_mult, air_opacity, color_by):
+    # i want to use a do-while but that doesnt exist in python
+    '''
+    while True:
+        solver.run(1)
+        #update_visualization(None, None, None, size_mult, air_opacity, color_by)
+        update_visualization(gen_clicks, sim_clicks, run_clicks, size_mult, air_opacity, color_by)
+
+        if not solver.running() or solver.get_current_time() > 60*5:
+            break
+
+    '''
+    solver.run(1)
+    await update_visualization(None, None, None, size_mult, air_opacity, color_by)
+
+    if solver.running() and solver.get_current_time() < 60*5:
+
+        update_visualization(None, None, 1, size_mult, air_opacity, color_by)
+        #run_simulation(gen_clicks, sim_clicks, run_clicks, size_mult, air_opacity, color_by)
 
 if __name__ == '__main__':
     print("Starting Enhanced Debug Heat Transfer Dashboard...")

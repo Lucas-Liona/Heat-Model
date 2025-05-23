@@ -5,6 +5,9 @@
 
 HeatSolver::HeatSolver(PointCloud& pointCloud, const std::vector<Material>& materials, double timeStep)
     : pointCloud_(pointCloud), materials_(materials), timeStep_(timeStep), currentTime_(0.0) {
+
+        setRunning(false);
+
         // Verify material properties
         if (materials_.size() < 3) {
             std::cerr << "ERROR: Not enough materials provided. Expected at least 3." << std::endl;
@@ -57,7 +60,7 @@ void HeatSolver::step() {
         double totalHeatTransfer = 0.0;
         
         // Use nanoflann k-d tree to find neighbors within 1cm
-        std::vector<size_t> neighborIndices = pointCloud_.findNeighborsInRadius(i, 0.01);
+        std::vector<size_t> neighborIndices = pointCloud_.findNeighborsInRadius(i, 0.011);
         
         // Debug: Print neighbor count for first few points
         if (i < 5) {
@@ -126,6 +129,7 @@ void HeatSolver::step() {
 
 void HeatSolver::run_for_time(double duration) {
     double endTime = currentTime_ + duration;
+    setRunning(true);
     
     while (currentTime_ < endTime) {
         step();
@@ -134,6 +138,16 @@ void HeatSolver::run_for_time(double duration) {
 
 double HeatSolver::getCurrentTime() const {
     return currentTime_;
+}
+
+void HeatSolver::setRunning(bool status)  {
+    running_ = status;
+    return;
+}
+
+bool HeatSolver::getRunning()  {
+
+    return running_;
 }
 
 double HeatSolver::getAverageTemperature(MaterialType material) const {

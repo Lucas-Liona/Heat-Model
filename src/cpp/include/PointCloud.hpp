@@ -15,7 +15,8 @@ class PointCloud;
 typedef nanoflann::KDTreeSingleIndexAdaptor<
     nanoflann::L2_Simple_Adaptor<double, PointCloud>,
     PointCloud,
-    3 // 3D points
+    3, // 3D points
+    size_t // Use size_t for index type to match our usage
 > PointCloudKDTree;
 
 class PointCloud {

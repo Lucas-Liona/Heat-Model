@@ -16,9 +16,13 @@ public:
     double getMaxTemperature() const;
     double getMinTemperature() const;
 
+    void setRunning(bool status);
+    bool getRunning();
+
 private:
     PointCloud& pointCloud_;
     const std::vector<Material> materials_;
     double timeStep_;
     double currentTime_;
+    bool running_;
 };
