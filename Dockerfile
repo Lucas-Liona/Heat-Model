@@ -31,6 +31,8 @@ RUN pip install --no-cache-dir --user -e .
 FROM python:3.11-slim
 
 # Install only runtime dependencies
+# Note: Package versions are not pinned to allow minor updates
+# If reproducibility is critical, pin versions like: libomp5=1:14.0-55ubuntu4
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libomp5 \
     && rm -rf /var/lib/apt/lists/*

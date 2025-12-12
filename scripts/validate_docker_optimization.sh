@@ -27,7 +27,7 @@ docker history heat-model:optimized --no-trunc | head -10
 
 echo ""
 echo -e "${BLUE}Testing if container runs...${NC}"
-CONTAINER_ID=$(docker run -d heat-model:optimized sleep 30)
+CONTAINER_ID=$(docker run -d heat-model:optimized sleep 60)
 
 if [ -z "$CONTAINER_ID" ]; then
     echo "Failed to start container"
@@ -35,6 +35,9 @@ if [ -z "$CONTAINER_ID" ]; then
 fi
 
 echo -e "${GREEN}Container started successfully: ${CONTAINER_ID}${NC}"
+
+# Wait a moment for container to be fully ready
+sleep 2
 
 echo ""
 echo -e "${BLUE}Checking installed packages in container...${NC}"
