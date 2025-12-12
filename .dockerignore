@@ -5,6 +5,7 @@ __pycache__/
 *.pyd
 .git/
 .gitignore
+.github/
 .vscode/
 *.egg-info/
 dist/
@@ -23,3 +24,14 @@ install_manifest.txt
 *.gif
 *.vtk
 *.log
+README.md
+LICENSE
+tests/
+.dockerignore
+docker-compose.yml
+Dockerfile
+results/
+*.swp
+*.swo
+*~
+.DS_Store
