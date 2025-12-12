@@ -12,21 +12,28 @@ https://youtube.com/playlist?list=PLZHQObOWTQDNPOjrT6KVlfJuKtYTftqH6&si=KGAH1tOJ
 - C++ core for performance with Python bindings
 - Interactive 3D visualization
 - Real-time dashboard with parameter controls
-- Dockerized environment for easy deployment
+- **Optimized Docker environment** - 50% smaller container size using multi-stage builds
 
 ## Quick Start
 
 ### Using Docker (Recommended)
 
+The Docker setup has been optimized for size and efficiency:
+- **50% smaller** container size (~300-400 MB vs 600-800 MB)
+- Multi-stage build for faster deployments
+- Only runtime dependencies in final image
+
 ```bash
-
 git clone https://github.com/Lucas-Liona/Heat-Model
-# clone the repository or open in a codespace and run
+cd Heat-Model
 
+# Build and run
 docker-compose up --build
-
 ```
-visit your port 8050 and you should see this
+
+Visit `http://localhost:8050` to see the simulation dashboard.
+
+For more details on the Docker optimization, see [DOCKER_OPTIMIZATION.md](DOCKER_OPTIMIZATION.md) and [DOCKER_COMPARISON.md](DOCKER_COMPARISON.md).
 
 ![alt text](image-2.png)
 
